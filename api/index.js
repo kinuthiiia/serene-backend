@@ -1,5 +1,7 @@
-import { ApolloServer } from "apollo-server-express";
-import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+import { ApolloServer } from "@apollo/server";
+import { expressMiddleware } from "@apollo/server/express4";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+
 import http from "http";
 import express from "express";
 import cors from "cors";
@@ -11,35 +13,42 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
 const httpServer = http.createServer(app);
 
-const startApolloServer = async (app, httpServer) => {
-  // DB set-up
-  mongoose.Promise = global.Promise;
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  introspection: true,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
 
-  const connection = mongoose.connect(process.env.DB_LOCAL, {
-    useNewUrlParser: true,
+mongoose.Promise = global.Promise;
+
+const connection = mongoose.connect(process.env.DB_LOCAL, {
+  useNewUrlParser: true,
+});
+
+connection
+  .then((db) => console.log("DB connected"))
+  .catch((err) => {
+    console.log(err);
   });
 
-  connection
-    .then((db) => console.log("DB connected"))
-    .catch((err) => {
-      console.log(err);
-    });
+await server.start();
 
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    introspection: true,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
+app.use(
+  "/graphql",
 
-  await server.start();
-  server.applyMiddleware({ app });
-};
+  cors({
+    origin: [
+      "https://serene-client.vercel.app",
+      "https://studio.apollographql.com",
+    ],
+  }),
 
-startApolloServer(app, httpServer);
+  express.json(),
+  expressMiddleware(server)
+);
 
 export default httpServer;

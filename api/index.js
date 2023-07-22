@@ -25,7 +25,7 @@ const server = new ApolloServer({
 
 mongoose.Promise = global.Promise;
 
-const connection = mongoose.connect(process.env.DB_LOCAL, {
+const connection = mongoose.connect(process.env.DB_REMOTE, {
   useNewUrlParser: true,
 });
 
@@ -44,6 +44,7 @@ app.use(
     origin: [
       "https://serene-client.vercel.app",
       "https://studio.apollographql.com",
+      "http://localhost:3000",
     ],
   }),
 

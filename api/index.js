@@ -43,8 +43,7 @@ app.use(
   cors({
     origin: [
       "https://serene-client.vercel.app",
-      "https://studio.apollographql.com",
-      "http://localhost:3000",
+      "https://studio.apollographql.com",     
     ],
   }),
 

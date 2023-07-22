@@ -41,10 +41,8 @@ app.use(
   "/graphql",
 
   cors({
-    origin: [
-      "https://serene-client.vercel.app",
-      "https://studio.apollographql.com",     
-    ],
+    origin: '*',
+    credentials: true
   }),
 
   express.json(),

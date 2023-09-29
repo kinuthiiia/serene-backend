@@ -14,6 +14,7 @@ export const TraineeSchema = new Schema(
         course: { type: Schema.Types.ObjectId, ref: "Course" },
         completed: Boolean,
         progress: Number,
+        completionDate: String,
       },
     ],
   },

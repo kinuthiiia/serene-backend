@@ -5,7 +5,7 @@ import { Trainee } from "./models/trainee.js";
 import { Lecture } from "./models/lecture.js";
 import { Course } from "./models/course.js";
 import { Service } from "./models/service.js";
-
+import { Iterable } from "./models/iterable.js";
 import cloudinary from "cloudinary";
 
 function getUnique(value, index, array) {
@@ -50,6 +50,7 @@ const resolvers = {
           course: await Course.findById(_course?.course),
           completed: _course?.completed,
           progress: _course?.progress,
+          completionDate: _course?.completionDate,
         };
         courses.push(course);
       }
@@ -102,6 +103,10 @@ const resolvers = {
       const sections = await Section.find({ page });
       return sections;
     },
+    getIterables: async () => {
+      const iterables = await Iterable.find();
+      return iterables;
+    },
     getProducts: async (_, args) => {
       const products = await Product.find({ removed: false });
       return products;
@@ -147,7 +152,8 @@ const resolvers = {
 
   Mutation: {
     updateTrainee: async (_, args) => {
-      const { id, course, progress, completed, password } = args;
+      const { id, course, progress, completed, password, completionDate } =
+        args;
 
       if (password) {
         await Trainee.updateOne(
@@ -178,6 +184,7 @@ const resolvers = {
             $set: {
               "registeredCourses.$.completed": completed,
               "registeredCourses.$.progress": progress,
+              "registeredCourses.$.completionDate": completionDate,
             },
           }
         );
@@ -481,6 +488,64 @@ const resolvers = {
       await User.updateOne({ email: args.email }, omit(args, ["email"]));
       let user = await User.findOne({ email: args.email });
       return user;
+    },
+
+    upsertSection: async (_, { value, identifier }) => {
+      let section = await Section.findOneAndUpdate(
+        {
+          identifier,
+        },
+        {
+          value,
+        },
+        {
+          upsert: true,
+        }
+      );
+
+      return section;
+    },
+    upsertIterable: async (_, { value, identifier, action, extra }) => {
+      let section;
+
+      console.log({ value, identifier, action, extra });
+
+      if (action == "upsert") {
+        section = await Iterable.findOneAndUpdate(
+          {
+            identifier,
+            extra,
+          },
+          {
+            $addToSet: {
+              value,
+            },
+          },
+          {
+            upsert: true,
+          }
+        );
+      } else if (
+        action == "delete" &&
+        (identifier == "clients" ||
+          identifier == "partners" ||
+          identifier == "slides")
+      ) {
+        section = await Iterable.findOneAndUpdate(
+          {
+            identifier,
+          },
+          { $pull: { value } },
+          { new: true }
+        );
+      } else if (action == "delete" && identifier == "testimonials") {
+        section = await Iterable.findOneAndDelete({
+          identifier: "testimonials",
+          value,
+        });
+      }
+
+      return section;
     },
   },
 };

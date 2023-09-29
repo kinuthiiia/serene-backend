@@ -53,6 +53,7 @@ type RegisteredCourse {
     course: Course
     completed: Boolean
     progress: Float
+    completionDate: String
 }
 
 
@@ -89,6 +90,13 @@ type Section {
     identifier: String
 }
 
+type Iterable {
+    id: ID!
+    value: [String]
+    identifier: String
+    extra: String
+}
+
 type CatsNSubcats {
     label: String
     subcategories: [String]
@@ -96,6 +104,7 @@ type CatsNSubcats {
 
 type Query { 
    getSections : [Section] 
+   getIterables : [Iterable] 
    getProducts: [Product]
    getProduct(id:ID!) : Product
    getFeatured: [Product]
@@ -119,6 +128,8 @@ type Mutation {
 
     deleteService(id: ID) : Service
 
+    upsertSection( value: String , identifier: String) : Section
+
     addLecture(   
         description: String
         content: String
@@ -134,6 +145,7 @@ type Mutation {
         progress: Float
         completed: Boolean
         password: String
+        completionDate: String
     ): Trainee
 
    updateLecture(
@@ -219,6 +231,13 @@ type Mutation {
         featured: Boolean
         price: Int
     ): Product
+
+    upsertIterable(
+        identifier: String
+        value: String
+        action: String
+        extra: String
+    ): Iterable
 }
 
 `;

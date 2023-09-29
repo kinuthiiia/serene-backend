@@ -7,8 +7,8 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 
-import resolvers from "../resolvers.js";
-import typeDefs from "../typeDefs.js";
+import resolvers from "./resolvers.js";
+import typeDefs from "./typeDefs.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -44,5 +44,9 @@ app.use(
 );
 app.use(express.json());
 app.use(expressMiddleware(server));
+
+app.listen(4000, () => {
+  console.log(`Server is running on port: ${4000}`);
+});
 
 export default httpServer;

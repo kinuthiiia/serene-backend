@@ -39,16 +39,10 @@ await server.start();
 
 app.use(
   cors({
-    origin: [
-      "https://serene-client.vercel.app",
-      "https://studio.apollographql.com",
-      "http://localhost:3000",
-    ],
-  }),
-
-  express.json(),
-  expressMiddleware(server)
+    origin: "*",
+  })
 );
 app.use(express.json());
+app.use(expressMiddleware(server));
 
 export default httpServer;

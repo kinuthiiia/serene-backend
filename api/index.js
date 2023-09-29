@@ -12,7 +12,7 @@ import typeDefs from "../typeDefs.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-export const app = express();
+const app = express();
 
 const httpServer = http.createServer(app);
 
@@ -42,6 +42,7 @@ app.use(
     origin: "*",
   })
 );
-
 app.use(express.json());
 app.use(expressMiddleware(server));
+
+export default httpServer;

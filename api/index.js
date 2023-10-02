@@ -7,8 +7,8 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 
-import resolvers from "./resolvers.js";
-import typeDefs from "./typeDefs.js";
+import resolvers from "../resolvers.js";
+import typeDefs from "../typeDefs.js";
 import dotenv from "dotenv";
 dotenv.config();
 

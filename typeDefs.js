@@ -188,12 +188,20 @@ type Mutation {
         userLevelAccess: String
     ): User
 
-    updateUser(
+    deleteUser(
+        email: String
+    ) : User
+
+    updateUser(    
        email: String
         firstName: String   
         lastName: String
         phoneNumber: String     
         password: String
+        canModifyUsers: Boolean
+        canModifyContent: Boolean
+        canModifySections: Boolean
+        canModifyProducts: Boolean
     ): User
 
    addSection(

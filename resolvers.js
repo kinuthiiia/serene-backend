@@ -353,6 +353,14 @@ const resolvers = {
       let user = newUser.save();
       return user;
     },
+
+    deleteUser: async (_, { email }) => {
+      const user = await User.findOneAndDelete({
+        email,
+      });
+
+      return user;
+    },
     addService: async (_, args) => {
       const { title, description, image, mini } = args;
       let res1 = await cloudinary.v2.uploader.upload(image, {

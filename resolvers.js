@@ -1,7 +1,7 @@
 import { Product } from "./models/product.js";
 import { Section } from "./models/section.js";
 import { User } from "./models/user.js";
-import { Trainee } from "./models/trainee.js";
+import { Admin } from "./models/admin.js";
 import { Lecture } from "./models/lecture.js";
 import { Course } from "./models/course.js";
 import { Service } from "./models/service.js";
@@ -39,8 +39,16 @@ const resolvers = {
       });
       return lectures;
     },
+
+    registeredUsers: async (parent, args, context, info) => {
+      const registeredUsers = await User.find({
+        "registeredCourses.course": parent?.id,
+      });
+
+      return registeredUsers;
+    },
   },
-  Trainee: {
+  User: {
     registeredCourses: async (parent, args, context, info) => {
       let courses = [];
 
@@ -51,6 +59,10 @@ const resolvers = {
           completed: _course?.completed,
           progress: _course?.progress,
           completionDate: _course?.completionDate,
+          code: _course?.code,
+          amount: _course?.amount,
+          timestamp: _course?.timestamp,
+          phoneNumber: _course?.phoneNumber,
         };
         courses.push(course);
       }
@@ -119,51 +131,61 @@ const resolvers = {
       const products = await Product.find({ featured: true });
       return products;
     },
-    getUsers: async (_, args) => {
-      const users = await User.find();
-      return users;
+    getAdmins: async (_, args) => {
+      const admins = await Admin.find();
+      return admins;
     },
     getCourses: async (_, args) => {
       const courses = await Course.find().populate("addedBy");
       return courses;
     },
-    getTrainee: async (_, { id }) => {
-      const trainee = await Trainee.findById(id);
-      return trainee;
+    getUser: async (_, { email }) => {
+      const user = await User.findOne({ email });
+      return user;
     },
-    getTrainees: async (_, args) => {
-      const trainees = await Trainee.find();
-      return trainees;
+    getUsers: async (_, args) => {
+      const users = await User.find();
+      return users;
     },
-    getUser: async (_, args) => {
+    getAdmin: async (_, args) => {
       const { email, password, id } = args;
 
-      let user;
+      let admin;
 
       if (!id) {
-        user = await User.findOne({ email, password });
+        admin = await Admin.findOne({ email, password });
       } else if (id) {
-        user = await User.findById(id);
+        admin = await Admin.findById(id);
       }
 
-      return user;
+      return admin;
     },
   },
 
   Mutation: {
-    updateTrainee: async (_, args) => {
-      const { id, course, progress, completed, password, completionDate } =
-        args;
+    updateUser: async (_, args) => {
+      const {
+        id,
+        course,
+        progress,
+        completed,
+        password,
+        completionDate,
+        code,
+        timestamp,
+        phoneNumber,
+        amount,
+      } = args;
 
       if (password) {
-        await Trainee.updateOne(
+        await User.updateOne(
           { _id: id },
           omit(args, ["id", "course", "progress", "completed"])
         );
       }
 
       if (course && progress) {
-        await Trainee.updateOne(
+        await User.updateOne(
           {
             _id: id,
             registeredCourses: { $elemMatch: { course } },
@@ -175,7 +197,7 @@ const resolvers = {
       }
 
       if (course && progress && completed) {
-        await Trainee.updateOne(
+        await User.updateOne(
           {
             _id: id,
             registeredCourses: { $elemMatch: { course } },
@@ -190,8 +212,25 @@ const resolvers = {
         );
       }
 
-      let trainee = await Trainee.findById(id);
-      return trainee;
+      if (course && code && phoneNumber && amount && timestamp) {
+        await User.updateOne(
+          {
+            _id: id,
+            registeredCourses: { $elemMatch: { course } },
+          },
+          {
+            $set: {
+              "registeredCourses.$.code": code,
+              "registeredCourses.$.phoneNumber": phoneNumber,
+              "registeredCourses.$.amount": amount,
+              "registeredCourses.$.timestamp": timestamp,
+            },
+          }
+        );
+      }
+
+      let user = await User.findById(id);
+      return user;
     },
     addCourse: async (_, args) => {
       console.log(args);
@@ -209,11 +248,6 @@ const resolvers = {
         payableAt,
       } = args;
 
-      let res = await cloudinary.v2.uploader.upload(image, {
-        public_id: "",
-        folder: "courses",
-      });
-
       let newCourse = new Course({
         name,
         addedBy,
@@ -222,7 +256,7 @@ const resolvers = {
         category,
         onSale: onSale ? onSale : false,
         was,
-        image: res?.url,
+        image,
         featured,
         payableAt,
       });
@@ -241,7 +275,7 @@ const resolvers = {
     enrollCourse: async (_, args) => {
       const { trainee, course } = args;
 
-      await Trainee.updateOne(
+      await User.updateOne(
         { _id: trainee },
         {
           $addToSet: {
@@ -250,8 +284,8 @@ const resolvers = {
         }
       );
 
-      let _trainee = await Trainee.findById(trainee);
-      return _trainee;
+      let user = await User.findById(trainee);
+      return user;
     },
     addLecture: async (_, args) => {
       const { description, content, title, quiz, course, timeEstimate } = args;
@@ -269,17 +303,16 @@ const resolvers = {
       const lecture = newLecture.save();
       return lecture;
     },
-    addTrainee: async (_, args) => {
-      const { email, fullName, password } = args;
+    addUser: async (_, args) => {
+      const { email, name } = args;
 
-      let newTrainee = new Trainee({
+      let newUser = new User({
         email,
-        fullName,
-        password,
+        name,
       });
 
-      let trainee = newTrainee.save();
-      return trainee;
+      let user = newUser.save();
+      return user;
     },
     addSection: async (_, { page, value, identifier }) => {
       if (isFile(value)) {
@@ -306,14 +339,14 @@ const resolvers = {
         return section;
       }
     },
-    addUser: async (_, args) => {
+    addAdmin: async (_, args) => {
       const { firstName, lastName, email, userLevelAccess } = args;
 
-      let newUser;
+      let newAdmin;
 
       switch (userLevelAccess) {
         case "super-admin":
-          newUser = new User({
+          newAdmin = new Admin({
             firstName,
             lastName,
             email,
@@ -326,7 +359,7 @@ const resolvers = {
           break;
 
         case "content-manager":
-          newUser = new User({
+          newAdmin = new Admin({
             firstName,
             lastName,
             email,
@@ -339,7 +372,7 @@ const resolvers = {
           break;
 
         default:
-          newUser = new User({
+          newAdmin = new Admin({
             firstName,
             lastName,
             email,
@@ -352,16 +385,16 @@ const resolvers = {
           break;
       }
 
-      let user = newUser.save();
-      return user;
+      let admin = newAdmin.save();
+      return admin;
     },
 
-    deleteUser: async (_, { email }) => {
-      const user = await User.findOneAndDelete({
+    deleteAdmin: async (_, { email }) => {
+      const admin = await Admin.findOneAndDelete({
         email,
       });
 
-      return user;
+      return admin;
     },
     addService: async (_, args) => {
       const { title, description, image, mini } = args;
@@ -399,24 +432,12 @@ const resolvers = {
         price,
       } = args;
 
-      let res1 = await cloudinary.v2.uploader.upload(image, {
-        public_id: "",
-        folder: "products",
-      });
-
-      let res2 = await cloudinary.v2.uploader.upload(specSheet, {
-        public_id: "",
-        folder: "specSheets",
-      });
-
-      console.log(res1.url, res2.url);
-
       const newProduct = new Product({
         category,
         subCategory,
         name,
-        image: res1.url,
-        specSheet: res2.url,
+        image,
+        specSheet,
         description,
         removed: false,
         featured,
@@ -494,10 +515,10 @@ const resolvers = {
       let product = await Product.findById(args.id);
       return product;
     },
-    updateUser: async (_, args) => {
-      await User.updateOne({ email: args.email }, omit(args, ["email"]));
-      let user = await User.findOne({ email: args.email });
-      return user;
+    updateAdmin: async (_, args) => {
+      await Admin.updateOne({ email: args.email }, omit(args, ["email"]));
+      let admin = await Admin.findOne({ email: args.email });
+      return admin;
     },
 
     upsertSection: async (_, { value, identifier }) => {

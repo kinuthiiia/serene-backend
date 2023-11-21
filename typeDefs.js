@@ -4,7 +4,7 @@ type Course {
     name: String
     createdAt: String
     description: String
-    addedBy: User    
+    addedBy: Admin
     image: String
     was: Int
     category: String
@@ -12,6 +12,7 @@ type Course {
     onSale: Boolean
     payableAt: Int
     lectures: [Lecture]
+    registeredUsers: [User]
 }
 
 
@@ -40,14 +41,15 @@ type Question {
     answer: Int
 }
 
-type Trainee {
+type User {
     id : ID!
     email: String
-    fullName: String
-    image: String
-    password: String
-    registeredCourses: [RegisteredCourse]
+    name: String
+    image: String   
+    registeredCourses: [RegisteredCourse]    
 }
+
+
 
 type RegisteredCourse {
     id: ID
@@ -55,6 +57,10 @@ type RegisteredCourse {
     completed: Boolean
     progress: Float
     completionDate: String
+    code: String
+    amount: Int
+    timestamp: String
+    phoneNumber: String
 }
 
 
@@ -71,7 +77,7 @@ type Product {
     price: Int
 }
 
-type User{
+type Admin{
     id: ID!
     image: String   
     firstName: String
@@ -109,11 +115,11 @@ type Query {
    getProducts: [Product]
    getProduct(id:ID!) : Product
    getFeatured: [Product]
-   getUsers: [User]
-   getUser(email: String, password: String , id: ID) : User
+   getAdmins: [Admin]
+   getAdmin(email: String, password: String , id: ID) : Admin
    getCourses: [Course]
-   getTrainee(id: ID): Trainee
-   getTrainees: [Trainee]
+   getUser(email: String): User
+   getUsers: [User]
    getCatsNSubcats: [CatsNSubcats]
   
    getServices: [Service]
@@ -140,14 +146,18 @@ type Mutation {
         course: ID
     ): Lecture
 
-    updateTrainee(
+    updateUser(
         id: ID!
         course: ID
         progress: Float
         completed: Boolean
         password: String
         completionDate: String
-    ): Trainee
+        code: String
+        amount : Int
+        timestamp: String
+        phoneNumber: String
+    ): User
 
    updateLecture(
         id: ID
@@ -172,29 +182,28 @@ type Mutation {
         payableAt: Int
     ): Course
 
-    addTrainee(
+    addUser(
         email: String
-        fullName: String
-        password: String
-    ): Trainee
+        name: String        
+    ): User
 
     enrollCourse(
         trainee: ID
         course: ID        
-    ): Trainee
+    ): User
 
-    addUser(    
+    addAdmin(    
         firstName: String   
         lastName: String
         email: String     
         userLevelAccess: String
-    ): User
+    ): Admin
 
-    deleteUser(
+    deleteAdmin(
         email: String
-    ) : User
+    ) : Admin
 
-    updateUser(    
+    updateAdmin(    
        email: String
         firstName: String   
         lastName: String
@@ -204,7 +213,7 @@ type Mutation {
         canModifyContent: Boolean
         canModifySections: Boolean
         canModifyProducts: Boolean
-    ): User
+    ): Admin
 
    addSection(
         page: ID
@@ -220,7 +229,7 @@ type Mutation {
         specSheet: String
         description: String
         featured: Boolean
-        price: Float
+        price: Int
     ) : Product
 
     updateSection(

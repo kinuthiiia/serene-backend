@@ -6,7 +6,7 @@ const { Schema } = mongoose;
 export const CourseSchema = new Schema(
   {
     name: String,
-    addedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    addedBy: { type: Schema.Types.ObjectId, ref: "Admin" },
     price: Number,
     description: String,
     image: String,

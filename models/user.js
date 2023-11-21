@@ -5,16 +5,21 @@ const { Schema } = mongoose;
 
 export const UserSchema = new Schema(
   {
-    firstName: String,
-    lastName: String,
-    image: String,
     email: String,
-    phoneNumber: String,
-    password: String,
-    canModifyUsers: Boolean,
-    canModifyContent: Boolean,
-    canModifySections: Boolean,
-    canModifyProducts: Boolean,
+    name: String,
+    image: String,
+    registeredCourses: [
+      {
+        course: { type: Schema.Types.ObjectId, ref: "Course" },
+        completed: Boolean,
+        progress: Number,
+        completionDate: String,
+        code: String,
+        amount: Number,
+        phoneNumber: String,
+        timestamp: String,
+      },
+    ],
   },
   {
     collection: "users",
